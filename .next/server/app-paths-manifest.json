@@ -1,5 +1,8 @@
 {
   "/page": "app/page.js",
-  "/profile/settings/page": "app/profile/settings/page.js",
-  "/community/page": "app/community/page.js"
+  "/add-data/page": "app/add-data/page.js",
+  "/transportation/page": "app/transportation/page.js",
+  "/crop-guide/page": "app/crop-guide/page.js",
+  "/marketplace/page": "app/marketplace/page.js",
+  "/weather/page": "app/weather/page.js"
 }
