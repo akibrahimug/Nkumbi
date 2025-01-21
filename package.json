@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "-------- build, dev ---------------------------------------------------------------": "-",
+    "clean:dev": "rimraf .next && yarn dev",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "jest"
+    "commit": "git-cz",
+    "-------- test ---------------------------------------------------------------": "-"
   },
   "dependencies": {
     "@hookform/resolvers": "latest",
@@ -38,43 +39,57 @@
     "@radix-ui/react-toggle": "^1.1.1",
     "@radix-ui/react-toggle-group": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.6",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@vercel/kv": "latest",
+    "ai": "latest",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "date-fns": "latest",
     "embla-carousel-react": "8.5.1",
+    "framer-motion": "latest",
     "input-otp": "1.4.1",
+    "leaflet": "latest",
     "lucide-react": "^0.454.0",
     "next": "14.2.16",
     "next-themes": "^0.4.4",
+    "openai-edge": "latest",
     "react": "^18",
     "react-day-picker": "8.10.1",
     "react-dom": "^18",
     "react-hook-form": "latest",
+    "react-intersection-observer": "latest",
+    "react-leaflet": "latest",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
-    "zod": "latest",
-    "framer-motion": "latest",
-    "ai": "latest",
-    "react-intersection-observer": "latest",
-    "openai-edge": "latest",
-    "@vercel/kv": "latest",
-    "react-leaflet": "latest",
-    "leaflet": "latest",
-    "@testing-library/react": "latest",
-    "@testing-library/jest-dom": "latest"
+    "zod": "latest"
   },
   "devDependencies": {
+    "@commitlint/cli": "^16.2.4",
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/git": "^9.0.0",
+    "@semantic-release/github": "^9.0.4",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "commitizen": "^4.2.4",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.1.7",
     "postcss": "^8",
+    "semantic-release": "^17.4.2",
+    "semver": "^7.3.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }
