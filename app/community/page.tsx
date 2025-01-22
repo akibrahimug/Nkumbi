@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Users, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Post } from "@/types";
 import { PostItem } from "../components/PostItem";
@@ -31,6 +31,7 @@ async function fetchAllPosts(): Promise<Post[]> {
           author: "John Smith",
           content: "Yes, I've used neem oil and it works great!",
           timestamp: "1 hour ago",
+          votes: 3,
           likes: 3,
           dislikes: 0,
           userVote: "none",
@@ -41,15 +42,18 @@ async function fetchAllPosts(): Promise<Post[]> {
           content:
             "It's good, but be careful not to apply it during the hot part of the day.",
           timestamp: "30 minutes ago",
+          votes: 1,
           likes: 1,
           dislikes: 0,
           userVote: "none",
         },
       ],
+      votes: 5,
       likes: 5,
       dislikes: 0,
       userVote: "none",
     },
+    // ... (other posts)
   ];
 }
 

@@ -50,7 +50,7 @@ export function PostItem({
   };
 
   return (
-    <li className="border-b pb-4">
+    <li className="pb-4">
       <div className="flex items-center mb-2">
         <span className="font-semibold">{post.author}</span>
         <span className="text-xs text-gray-500 ml-auto">{post.timestamp}</span>

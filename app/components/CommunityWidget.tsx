@@ -127,7 +127,7 @@ export default function CommunityWidget() {
         <>
           <ul className="space-y-4">
             {recentPosts.map((post) => (
-              <li key={post.id} className="border-b pb-2 p-2 rounded-md">
+              <li key={post.id} className=" pb-2 p-2 rounded-md">
                 <div className="flex items-center mb-2">
                   <div className="mr-2 text-[#2C5F2D]">
                     {cropIcons[post.avatar as keyof typeof cropIcons]}
@@ -147,21 +147,6 @@ export default function CommunityWidget() {
                     <AccordionTrigger className="text-xs sm:text-sm text-[#2C5F2D]">
                       {post.replies.length} Replies
                     </AccordionTrigger>
-                    <AccordionContent>
-                      <ul className="space-y-2">
-                        {post.replies.map((reply) => (
-                          <li key={reply.id} className="text-xs sm:text-sm">
-                            <span className="font-semibold">
-                              {reply.author}:
-                            </span>{" "}
-                            {reply.content}
-                            <span className="text-xs text-gray-500 ml-2">
-                              {reply.timestamp}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </AccordionContent>
                   </AccordionItem>
                 </Accordion>
               </li>
