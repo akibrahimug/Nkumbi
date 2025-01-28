@@ -1,10 +1,9 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { User, Settings, LogOut, ChevronDown } from 'lucide-react'
-import { Button } from "@/components/ui/button"
+"use client";
+import Cookies from "js-cookie";
+import Link from "next/link";
+import Image from "next/image";
+import { User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,54 +11,43 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
-type UserProfile = {
-  name: string;
-  avatar: string;
-  email: string;
-  listingsCount: number;
-  postsCount: number;
-}
-
-async function fetchUserProfile(): Promise<UserProfile | null> {
-  // In a real application, this would be an API call to check if the user is logged in
-  // and fetch their profile data
-  // For demonstration, we'll simulate an API delay and return a mock user
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  // Simulating a logged-in user
-  return {
-    name: "Jane Farmer",
-    avatar: "/placeholder.svg?height=100&width=100",
-    email: "jane.farmer@example.com",
-    listingsCount: 5,
-    postsCount: 12
-  }
-
-  // Uncomment the following line to simulate a logged-out state
-  // return null;
-}
+} from "@/components/ui/dropdown-menu";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { clearUser } from "@/store/slices/userSlice";
+import { toast } from "sonner";
 
 export default function UserProfileDropdown() {
-  const [user, setUser] = useState<UserProfile | null>(null)
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { data: session } = useSession();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await fetchUserProfile()
-      setUser(data)
+  const handleSignOut = async () => {
+    try {
+      // Clear all cookies
+      Object.keys(Cookies.get()).forEach((cookieName) => {
+        Cookies.remove(cookieName, { path: "/" });
+      });
+
+      // Clear Redux state
+      dispatch(clearUser());
+
+      // Sign out from NextAuth
+      await signOut({
+        redirect: false,
+      });
+
+      // Force a clean reload to the auth page
+      window.location.replace("/auth");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Error signing out");
     }
-    fetchData()
+  };
 
-    // Set up a polling mechanism to check for updates every 30 seconds
-    const intervalId = setInterval(fetchData, 30000)
-
-    // Clean up the interval when the component unmounts
-    return () => clearInterval(intervalId)
-  }, [])
-
-  if (!user) {
-    return null // Don't render anything if the user is not logged in
+  if (!session) {
+    return null;
   }
 
   return (
@@ -67,20 +55,22 @@ export default function UserProfileDropdown() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Image
-            src={user.avatar || "/placeholder.svg"}
-            alt={user.name}
-            className="rounded-full"
+            src={session.user?.image || "/placeholder.svg"}
+            alt={session.user?.name || "User"}
             width={32}
             height={32}
+            className="rounded-full"
           />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">
+              {session.user?.name}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+              {session.user?.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -88,22 +78,21 @@ export default function UserProfileDropdown() {
         <DropdownMenuItem asChild>
           <Link href="/profile">
             <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+            Profile
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/profile/settings">
             <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+            Settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
-

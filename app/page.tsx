@@ -11,15 +11,15 @@ import {
   FileText,
 } from "lucide-react";
 import { RefreshProvider } from "@/contexts/RefreshContext";
-import UserProfileDropdown from "./components/UserProfileDropdown";
-import NotificationDropdown from "./components/NotificationDropdown";
-import AskFarmingAIWidget from "./components/AskFarmingAIWidget";
-import WeatherWidget from "./components/WeatherWidget";
-import MarketPricesWidget from "./components/MarketPricesWidget";
-import CommunityWidget from "./components/CommunityWidget";
-import MarketplaceWidget from "./components/MarketplaceWidget";
-import KnownBuyersWidget from "./components/KnownBuyersWidget";
-import TransportationWidget from "./components/TransportationWidget";
+import UserProfileDropdown from "@/app/components/UserProfileDropdown";
+import NotificationDropdown from "@/app/components/NotificationDropdown";
+import AskFarmingAIWidget from "@/app/components/AskFarmingAIWidget";
+import WeatherWidget from "@/app/components/WeatherWidget";
+import MarketPricesWidget from "@/app/components/MarketPricesWidget";
+import CommunityWidget from "@/app/components/CommunityWidget";
+import MarketplaceWidget from "@/app/components/MarketplaceWidget";
+import KnownBuyersWidget from "@/app/components/KnownBuyersWidget";
+import TransportationWidget from "@/app/components/TransportationWidget";
 
 function QuickAccessButton({
   icon,
