@@ -1,12 +1,13 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ShoppingBag, MessageSquare, Settings } from "lucide-react";
 import UserProfileDropdown from "@/app/components/UserProfileDropdown";
 import NotificationDropdown from "@/app/components/NotificationDropdown";
-import UserAvatarWidget from "@/app/components/UserAvatarWidget";
-import { useSession } from "next-auth/react";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/userSlice";
 
 type UserProfile = {
   name: string;
@@ -19,24 +20,25 @@ type UserProfile = {
 };
 
 export default function ProfilePage() {
-  const [profileData, setProfileData] = useState<UserProfile | null>(null);
-  const { data: session } = useSession();
+  // Instead of useSession(), get user from Redux
+  const user = useSelector(selectUser);
 
-  const currentUser = session?.user;
+  const [profileData, setProfileData] = useState<UserProfile | null>(null);
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // In a real application, this would be an API call
-        // For demonstration, we'll simulate an API delay
+        // In a real application, call an actual API endpoint.
+        // For now, we simulate an async delay.
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
+        // Fallbacks for each field if user is not fully defined
         const data: UserProfile = {
-          name: currentUser?.name || "Guest User",
-          avatar:
-            currentUser?.avatar || "/placeholder.svg?height=200&width=200",
-          email: currentUser?.email || "guest@example.com",
-          location: currentUser?.location || "Unknown Location",
-          joinDate: "January 2023",
+          name: user?.name || "Guest User",
+          avatar: user?.avatar || "/placeholder.svg",
+          email: user?.email || "guest@example.com",
+          location: user?.location || "Earth",
+          joinDate: Date.now().toString(),
           listingsCount: 5,
           postsCount: 12,
         };
@@ -48,11 +50,7 @@ export default function ProfilePage() {
     };
 
     fetchUserProfile();
-  }, [currentUser]);
-
-  if (!profileData) {
-    return <div>Loading...</div>;
-  }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-[#F4F1DE] text-[#5E503F]">
@@ -68,12 +66,12 @@ export default function ProfilePage() {
           <UserProfileDropdown />
         </div>
       </header>
+
       <main className="p-4 space-y-4">
-        <UserAvatarWidget />
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
             <Image
-              src={profileData.avatar || "/placeholder.svg"}
+              src={profileData.avatar}
               alt={profileData.name}
               width={200}
               height={200}
@@ -99,11 +97,13 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-xl font-semibold mb-4">Recent Activity</h3>
           {/* Add recent activity content here */}
           <p>No recent activity to display.</p>
         </div>
+
         <Link
           href="/profile/settings"
           className="inline-flex items-center bg-[#2C5F2D] text-white px-4 py-2 rounded-md hover:bg-[#1F4F1F] transition-colors"

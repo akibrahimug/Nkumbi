@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Textarea } from "@/app/components/ui/textarea";
 
 export function NewDiscussionForm() {
   const [topic, setTopic] = useState("");

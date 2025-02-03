@@ -8,7 +8,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/app/components/ui/card";
 import { CropInformation } from "@/app/components/add-data-components/CropInformation";
 import { PlantingGuide } from "@/app/components/add-data-components/PlantingGuide";
 import { GrowthCycle } from "@/app/components/add-data-components/GrowthCycle";

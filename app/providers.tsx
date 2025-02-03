@@ -1,18 +1,17 @@
 "use client";
-import React, { ReactNode } from "react";
+
 import { SessionProvider } from "next-auth/react";
-import { Provider } from "react-redux";
+import { Provider as ReduxProvider } from "react-redux";
 import { store } from "@/store";
-
-interface ProvidersProps {
-  children: ReactNode;
-  session?: any; // We'll type this properly
-}
-
-export function Providers({ children, session }: ProvidersProps) {
+import SyncSession from "@/app/components/SyncSession";
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider session={session}>
-      <Provider store={store}>{children}</Provider>
+    <SessionProvider>
+      <ReduxProvider store={store}>
+        {/* This keeps Redux in sync with the NextAuth session */}
+        <SyncSession />
+        {children}
+      </ReduxProvider>
     </SessionProvider>
   );
 }

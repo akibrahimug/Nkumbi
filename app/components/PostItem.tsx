@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { MessageCircle, ThumbsUp, ThumbsDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
 import { CommentItem } from "./CommentItem";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/app/components/ui/accordion";
 import { Post } from "@/types";
 
 interface PostItemProps {

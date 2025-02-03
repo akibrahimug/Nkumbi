@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Bell } from 'lucide-react'
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Bell } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,53 +11,71 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/app/components/ui/dropdown-menu";
 
 type Notification = {
   id: number;
-  type: 'price_change' | 'new_offer' | 'community_event';
+  type: "price_change" | "new_offer" | "community_event";
   message: string;
   link: string;
   read: boolean;
-}
+};
 
 async function fetchNotifications(): Promise<Notification[]> {
   // In a real application, this would be an API call
   // For demonstration, we'll simulate an API delay
-  await new Promise(resolve => setTimeout(resolve, 500))
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   return [
-    { id: 1, type: 'price_change', message: 'Maize prices have increased by 5%', link: '/market-prices', read: false },
-    { id: 2, type: 'new_offer', message: 'New offer: Bulk purchase of coffee beans', link: '/marketplace/coffee', read: false },
-    { id: 3, type: 'community_event', message: 'Upcoming workshop: Sustainable Farming Practices', link: '/community/events', read: false },
-  ]
+    {
+      id: 1,
+      type: "price_change",
+      message: "Maize prices have increased by 5%",
+      link: "/market-prices",
+      read: false,
+    },
+    {
+      id: 2,
+      type: "new_offer",
+      message: "New offer: Bulk purchase of coffee beans",
+      link: "/marketplace/coffee",
+      read: false,
+    },
+    {
+      id: 3,
+      type: "community_event",
+      message: "Upcoming workshop: Sustainable Farming Practices",
+      link: "/community/events",
+      read: false,
+    },
+  ];
 }
 
 export default function NotificationDropdown() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await fetchNotifications()
-      setNotifications(data)
-      setUnreadCount(data.filter(n => !n.read).length)
-    }
-    fetchData()
+      const data = await fetchNotifications();
+      setNotifications(data);
+      setUnreadCount(data.filter((n) => !n.read).length);
+    };
+    fetchData();
 
     // Set up a polling mechanism to check for updates every 30 seconds
-    const intervalId = setInterval(fetchData, 30000)
+    const intervalId = setInterval(fetchData, 30000);
 
     // Clean up the interval when the component unmounts
-    return () => clearInterval(intervalId)
-  }, [])
+    return () => clearInterval(intervalId);
+  }, []);
 
   const markAsRead = (id: number) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ))
-    setUnreadCount(prev => Math.max(0, prev - 1))
-  }
+    setNotifications(
+      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
 
   return (
     <DropdownMenu>
@@ -79,9 +97,11 @@ export default function NotificationDropdown() {
         ) : (
           notifications.map((notification) => (
             <DropdownMenuItem key={notification.id} asChild>
-              <Link 
-                href={notification.link} 
-                className={`block py-2 px-4 hover:bg-gray-100 ${notification.read ? 'text-gray-600' : 'font-semibold'}`}
+              <Link
+                href={notification.link}
+                className={`block py-2 px-4 hover:bg-gray-100 ${
+                  notification.read ? "text-gray-600" : "font-semibold"
+                }`}
                 onClick={() => markAsRead(notification.id)}
               >
                 {notification.message}
@@ -91,6 +111,5 @@ export default function NotificationDropdown() {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
-

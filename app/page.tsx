@@ -20,7 +20,11 @@ import CommunityWidget from "@/app/components/CommunityWidget";
 import MarketplaceWidget from "@/app/components/MarketplaceWidget";
 import KnownBuyersWidget from "@/app/components/KnownBuyersWidget";
 import TransportationWidget from "@/app/components/TransportationWidget";
-
+import { Suspense } from "react";
+import { DashboardSkeleton } from "@/app/components/skeletons/DashboardSkeleton";
+import { QuickAccessSkeleton } from "@/app/components/skeletons/QuickAccessSkeleton";
+import { AskFarmingAISkeleton } from "@/app/components/skeletons/AskFarmingAISkeleton";
+import { WeatherSkeleton } from "./components/skeletons/WeatherSkeleton";
 function QuickAccessButton({
   icon,
   label,
@@ -45,6 +49,48 @@ function QuickAccessButton({
   );
 }
 
+function QuickAccessButtons() {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-7 gap-4 max-w-7xl mx-auto">
+      <QuickAccessButton
+        icon={<Corn />}
+        label="Crop Guide"
+        href="/crop-guide"
+      />
+      <QuickAccessButton
+        icon={<Sun />}
+        label="Weather Forecast"
+        href="/weather"
+      />
+      <QuickAccessButton
+        icon={<Users />}
+        label="Community Forum"
+        href="/community"
+      />
+      <QuickAccessButton
+        icon={<ShoppingCart />}
+        label="Marketplace"
+        href="/marketplace"
+      />
+      <QuickAccessButton
+        icon={<ShoppingBag />}
+        label="Known Buyers"
+        href="/buyers"
+      />
+      <QuickAccessButton
+        icon={<Truck />}
+        label="Transportation"
+        href="/transportation"
+      />
+      <QuickAccessButton
+        icon={<FileText />}
+        label="Add Data"
+        href="/add-data"
+      />
+    </div>
+  );
+}
+
 function DashboardContent() {
   return (
     <div className="min-h-screen bg-[#F4F1DE] text-[#5E503F]">
@@ -57,49 +103,19 @@ function DashboardContent() {
       </header>
 
       <nav className="bg-[#F4F1DE] p-4">
-        <div className="grid grid-cols-2 sm:grid-cols-7 gap-4 max-w-7xl mx-auto">
-          <QuickAccessButton
-            icon={<Corn />}
-            label="Crop Guide"
-            href="/crop-guide"
-          />
-          <QuickAccessButton
-            icon={<Sun />}
-            label="Weather Forecast"
-            href="/weather"
-          />
-          <QuickAccessButton
-            icon={<Users />}
-            label="Community Forum"
-            href="/community"
-          />
-          <QuickAccessButton
-            icon={<ShoppingCart />}
-            label="Marketplace"
-            href="/marketplace"
-          />
-          <QuickAccessButton
-            icon={<ShoppingBag />}
-            label="Known Buyers"
-            href="/buyers"
-          />
-          <QuickAccessButton
-            icon={<Truck />}
-            label="Transportation"
-            href="/transportation"
-          />
-          <QuickAccessButton
-            icon={<FileText />}
-            label="Add Data"
-            href="/add-data"
-          />
-        </div>
+        <Suspense fallback={<QuickAccessSkeleton />}>
+          <QuickAccessButtons />
+        </Suspense>
       </nav>
 
       <div className="p-4 space-y-4 max-w-7xl mx-auto">
-        <AskFarmingAIWidget />
+        <Suspense fallback={<AskFarmingAISkeleton />}>
+          <AskFarmingAIWidget />
+        </Suspense>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <WeatherWidget />
+          <Suspense fallback={<WeatherSkeleton />}>
+            <WeatherWidget />
+          </Suspense>
           <MarketPricesWidget />
           <CommunityWidget />
           <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -120,7 +136,9 @@ export default function Dashboard() {
     <RefreshProvider refreshInterval={300000}>
       {" "}
       {/* Refresh every 5 minutes */}
-      <DashboardContent />
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardContent />
+      </Suspense>
     </RefreshProvider>
   );
 }

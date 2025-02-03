@@ -1,17 +1,17 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { encrypt, decrypt } from "@/utils/encryption";
-import Cookies from "js-cookie";
-import { signIn } from "next-auth/react";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import { RootState } from "@/store";
+
+export interface UserData {
+  _id?: string;
+  name?: string;
+  username?: string;
+  email: string;
+  avatar?: string;
+  location?: string;
+}
 
 export interface UserState {
-  user: {
-    _id?: string;
-    name?: string;
-    username?: string;
-    email: string;
-    avatar?: string;
-    location?: string;
-  } | null;
+  user: UserData | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
@@ -24,32 +24,9 @@ const initialState: UserState = {
   error: null,
 };
 
-// Async thunks for authentication
-export const loginUser = createAsyncThunk(
-  "user/login",
-  async (
-    credentials: { email: string; password: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await signIn("credentials", {
-        ...credentials,
-        redirect: false,
-      });
-
-      if (response?.error) {
-        return rejectWithValue(response.error);
-      }
-
-      return null; // SyncSession will handle user state via useEffect
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
+// Async thunk for registering a user (sign-up)
 export const registerUser = createAsyncThunk(
-  "user/register",
+  "user/registerUser",
   async (
     credentials: { username: string; email: string; password: string },
     { rejectWithValue }
@@ -62,8 +39,8 @@ export const registerUser = createAsyncThunk(
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message);
+        const errorData = await response.json();
+        return rejectWithValue(errorData.error || "Failed to register");
       }
 
       const data = await response.json();
@@ -74,70 +51,36 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-const userSlice = createSlice({
+export const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
-    },
-    setError: (state, action: PayloadAction<string | null>) => {
-      state.error = action.payload;
-    },
-    setUser: (state, action: PayloadAction<UserState["user"]>) => {
+    // Called by SyncSession when NextAuth session changes
+    setUser: (state, action: PayloadAction<UserData | null>) => {
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
-
-      if (action.payload) {
-        const encryptedUser = encrypt(JSON.stringify(action.payload));
-        Cookies.set("user", encryptedUser, {
-          expires: 7,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-          path: "/",
-          httpOnly: false, // Only false if you need client-side access
-        });
-      }
     },
+    // Clears user from Redux on sign-out or session expiration
     clearUser: (state) => {
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
-      Cookies.remove("user");
-    },
-    updateUser: (state, action: PayloadAction<Partial<UserState["user"]>>) => {
-      if (state.user) {
-        state.user = { ...state.user, ...action.payload };
-      }
     },
   },
   extraReducers: (builder) => {
+    // Handle registerUser
     builder
-      // Login cases
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
-        state.error = null;
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // Register cases
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
-        state.error = null;
+        // We do NOT automatically set user here,
+        // because we rely on NextAuth to handle the session after signIn.
+        // If you want to store user data immediately, you could do so:
+        // state.user = action.payload;
+        // state.isAuthenticated = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -146,7 +89,12 @@ const userSlice = createSlice({
   },
 });
 
-export const { setLoading, setError, setUser, clearUser, updateUser } =
-  userSlice.actions;
+export const { setUser, clearUser } = userSlice.actions;
+
+export const selectUser = (state: RootState) => state.user.user;
+export const selectIsAuthenticated = (state: RootState) =>
+  state.user.isAuthenticated;
+export const selectUserLoading = (state: RootState) => state.user.loading;
+export const selectUserError = (state: RootState) => state.user.error;
 
 export default userSlice.reducer;

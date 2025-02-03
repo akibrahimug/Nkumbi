@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Icons } from "@/components/ui/icons";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Icons } from "@/app/components/ui/icons";
 import { toast } from "sonner";
-import { useDispatch, useSelector } from "react-redux";
-import { loginUser, registerUser } from "@/store/slices/userSlice";
-import { RootState } from "@/store";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store";
+import { registerUser } from "@/store/slices/userSlice";
+
 export function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,10 +19,8 @@ export function AuthForm() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const router = useRouter();
-  const dispatch = useDispatch();
-  const { error, loading, user } = useSelector(
-    (state: RootState) => state.user
-  );
+  const dispatch = useDispatch<AppDispatch>();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -29,29 +28,45 @@ export function AuthForm() {
     try {
       if (isSignUp) {
         // Sign up logic
-        await dispatch(
-          registerUser({ username, email, password }) as any
-        ).unwrap();
+        const resultAction = await dispatch(
+          registerUser({ username, email, password })
+        );
+        if (registerUser.rejected.match(resultAction)) {
+          // If there's an error from the signup route
+          const errorMsg = resultAction.payload as string;
+          toast.error(errorMsg);
+          return;
+        }
 
         // After successful registration, automatically sign in
-        const loginResult = await dispatch(
-          loginUser({ email, password }) as any
-        ).unwrap();
+        const signInResult = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
 
-        if (loginResult) {
-          toast.success("Account created and signed in successfully!");
-          router.push("/");
+        if (signInResult && signInResult.error) {
+          toast.error(signInResult.error);
+          return;
         }
+
+        toast.success("Account created and signed in successfully!");
+        router.push("/");
       } else {
-        // Sign in logic
-        const result = await dispatch(
-          loginUser({ email, password }) as any
-        ).unwrap();
+        // Sign in logic (Credentials)
+        const signInResult = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
 
-        if (result) {
-          toast.success("Signed in successfully!");
-          router.push("/");
+        if (signInResult && signInResult.error) {
+          toast.error(signInResult.error);
+          return;
         }
+
+        toast.success("Signed in successfully!");
+        router.push("/");
       }
     } catch (error: any) {
       toast.error(error?.message || "An error occurred. Please try again.");
@@ -60,11 +75,15 @@ export function AuthForm() {
     }
   };
 
-  const handleOAuthSignIn = (provider: string) => {
+  const handleOAuthSignIn = async (provider: string) => {
     setIsLoading(true);
-    signIn(provider, { callbackUrl: "/" })
-      .catch(() => toast.error("Error signing in with " + provider))
-      .finally(() => setIsLoading(false));
+    try {
+      await signIn(provider, { callbackUrl: "/" });
+    } catch (error) {
+      toast.error("Error signing in with " + provider);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -142,22 +161,7 @@ export function AuthForm() {
         >
           <Icons.google className="mr-2 h-4 w-4" /> Google
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => handleOAuthSignIn("facebook")}
-          disabled={isLoading}
-        >
-          <Icons.facebook className="mr-2 h-4 w-4" /> Facebook
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => handleOAuthSignIn("twitter")}
-          disabled={isLoading}
-        >
-          <Icons.twitter className="mr-2 h-4 w-4" /> Twitter
-        </Button>
+        {/* Add more providers if needed */}
       </div>
     </form>
   );

@@ -1,12 +1,15 @@
-import { Progress } from '@/components/ui/progress'
+import { Progress } from "@/app/components/ui/progress";
 
 interface ProgressIndicatorProps {
-  currentStep: number
-  totalSteps: number
+  currentStep: number;
+  totalSteps: number;
 }
 
-export function ProgressIndicator({ currentStep, totalSteps }: ProgressIndicatorProps) {
-  const progress = (currentStep / totalSteps) * 100
+export function ProgressIndicator({
+  currentStep,
+  totalSteps,
+}: ProgressIndicatorProps) {
+  const progress = (currentStep / totalSteps) * 100;
 
   return (
     <div className="w-full">
@@ -15,6 +18,5 @@ export function ProgressIndicator({ currentStep, totalSteps }: ProgressIndicator
         Step {currentStep} of {totalSteps}
       </p>
     </div>
-  )
+  );
 }
-

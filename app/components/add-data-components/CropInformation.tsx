@@ -1,17 +1,23 @@
-import { useFormContext } from 'react-hook-form'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useFormContext } from "react-hook-form";
+import { Label } from "@/app/components/ui/label";
+import { Input } from "@/app/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
 
 export function CropInformation() {
-  const { register } = useFormContext()
+  const { register } = useFormContext();
 
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Crop Information</h2>
       <div className="space-y-2">
         <Label htmlFor="cropName">Crop Name</Label>
-        <Select {...register('cropName')}>
+        <Select {...register("cropName")}>
           <SelectTrigger>
             <SelectValue placeholder="Select a crop" />
           </SelectTrigger>
@@ -25,9 +31,8 @@ export function CropInformation() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="otherCropName">Other Crop Name (if applicable)</Label>
-        <Input id="otherCropName" {...register('otherCropName')} />
+        <Input id="otherCropName" {...register("otherCropName")} />
       </div>
     </div>
-  )
+  );
 }
-
