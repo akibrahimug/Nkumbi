@@ -76,7 +76,12 @@ yarn install
 MONGODB_URI=your_mongodb_connection_string
 NEXTAUTH_SECRET=your_nextauth_secret
 NEXTAUTH_URL=http://localhost:3000
-# Add other required environment variables
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+NEXTAUTH_SECRET=
+ENCRYPTION_KEY=
+NEXT_PUBLIC_ENCRYPTION_KEY=
+HUGGINGFACE_API_TOKEN=
 ```
 
 4. Run the development server:
