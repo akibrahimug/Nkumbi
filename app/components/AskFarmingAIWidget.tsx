@@ -11,15 +11,15 @@ import {
   ThumbsDown,
   HelpCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
 import { useChat } from "ai/react";
 import { AutocompleteInput } from "./AutocompleteInput";
 import { RelatedTopics } from "./RelatedTopics";
 import { VoiceInput } from "./VoiceInput";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/app/components/ui/use-toast";
 import { useInView } from "react-intersection-observer";
 
 const CACHE_KEY = "farmingAICache";
@@ -50,7 +50,7 @@ export default function AskFarmingAIWidget() {
     handleSubmit,
     isLoading,
   } = useChat({
-    api: "/api/farming-ai",
+    api: "/api/ai",
     onFinish: (message) => {
       setShowFeedback(true);
       const topics = generateRelatedTopics(message.content);
@@ -231,29 +231,6 @@ export default function AskFarmingAIWidget() {
         <Wheat className="mr-2 text-[#2C5F2D] w-5 h-5 sm:w-6 sm:h-6" /> Ask the
         Farming AI
       </h2>
-      <form onSubmit={handleAskQuestion} className="space-y-4">
-        <AutocompleteInput onSelect={setInput} />
-        <div className="flex items-center">
-          <Input
-            type="text"
-            placeholder="Or type your question here..."
-            value={input}
-            onChange={handleInputChange}
-            className="flex-grow mr-2 border-[#2C5F2D] focus:ring-[#2C5F2D]"
-          />
-          <VoiceInput
-            onTranscript={handleVoiceInput}
-            isListening={isListening}
-            setIsListening={setIsListening}
-          />
-          <Button
-            type="submit"
-            className="ml-2 bg-[#2C5F2D] text-white hover:bg-[#1F4F1F]"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-      </form>
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -291,7 +268,7 @@ export default function AskFarmingAIWidget() {
                   exit={{ opacity: 0 }}
                 >
                   <motion.div
-                    className="bg-[#F4F1DE] text-[#5E503F] p-2 rounded-lg"
+                    className="bg-[#f4f3ee] text-[#000000] p-2 rounded-lg"
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ repeat: Infinity, duration: 1 }}
                   >
@@ -303,7 +280,7 @@ export default function AskFarmingAIWidget() {
             {showFeedback && (
               <div className="mt-4 flex items-center justify-between">
                 <div>
-                  <span className="mr-2 text-[#5E503F]">
+                  <span className="mr-2 text-[#000000]">
                     Was this response helpful?
                   </span>
                   <Button
@@ -336,32 +313,6 @@ export default function AskFarmingAIWidget() {
             {relatedTopics.length > 0 && (
               <RelatedTopics topics={relatedTopics} />
             )}
-            <div className="mt-4 flex justify-end space-x-2">
-              <Button
-                onClick={saveQuery}
-                variant="outline"
-                size="sm"
-                className="border-[#2C5F2D] text-[#2C5F2D] hover:bg-[#2C5F2D] hover:text-white"
-              >
-                <Save className="w-4 h-4 mr-1" /> Save
-              </Button>
-              <Button
-                onClick={shareQuery}
-                variant="outline"
-                size="sm"
-                className="border-[#2C5F2D] text-[#2C5F2D] hover:bg-[#2C5F2D] hover:text-white"
-              >
-                <Share2 className="w-4 h-4 mr-1" /> Share
-              </Button>
-              <Button
-                onClick={() => setIsExpanded(false)}
-                variant="outline"
-                size="sm"
-                className="border-[#2C5F2D] text-[#2C5F2D] hover:bg-[#2C5F2D] hover:text-white"
-              >
-                <History className="w-4 h-4 mr-1" /> Past Queries
-              </Button>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -387,6 +338,30 @@ export default function AskFarmingAIWidget() {
           </ul>
         </div>
       )}
+      <form onSubmit={handleAskQuestion} className="space-y-4 mt-4">
+        <AutocompleteInput onSelect={setInput} />
+        <div className="flex items-center">
+          <Input
+            type="text"
+            placeholder="Or type your question here..."
+            value={input}
+            onChange={handleInputChange}
+            className="flex-grow mr-2 border-[#2C5F2D] focus:ring-[#2C5F2D]"
+          />
+          <VoiceInput
+            onTranscript={handleVoiceInput}
+            isListening={isListening}
+            setIsListening={setIsListening}
+          />
+          <Button
+            type="submit"
+            className="ml-2 bg-[#2C5F2D] text-white hover:bg-[#1F4F1F]"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
+      </form>
+
       <div className="mt-4 text-sm text-[#5E503F]">
         <Link href="/community" className="text-[#2C5F2D] hover:underline">
           Visit our community forum for more discussions

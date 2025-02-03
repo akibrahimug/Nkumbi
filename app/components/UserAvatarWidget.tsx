@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { User, Settings, ShoppingBag, MessageSquare } from 'lucide-react'
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { User, Settings, ShoppingBag, MessageSquare } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,53 +12,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/app/components/ui/dropdown-menu";
+import { selectUser } from "@/store/slices/userSlice";
+import { useSelector } from "react-redux";
 
 type UserProfile = {
   name: string;
   avatar: string;
   listingsCount: number;
   postsCount: number;
-}
-
-async function fetchUserProfile(): Promise<UserProfile | null> {
-  // In a real application, this would be an API call to check if the user is logged in
-  // and fetch their profile data
-  // For demonstration, we'll simulate an API delay and return a mock user
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  // Simulating a logged-in user
-  return {
-    name: "Jane Farmer",
-    avatar: "/placeholder.svg?height=100&width=100",
-    listingsCount: 5,
-    postsCount: 12
-  }
-
-  // Uncomment the following line to simulate a logged-out state
-  // return null;
-}
+};
 
 export default function UserAvatarWidget() {
-  const [user, setUser] = useState<UserProfile | null>(null)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await fetchUserProfile()
-      setUser(data)
-    }
-    fetchData()
-
-    // Set up a polling mechanism to check for updates every 30 seconds
-    const intervalId = setInterval(fetchData, 30000)
-
-    // Clean up the interval when the component unmounts
-    return () => clearInterval(intervalId)
-  }, [])
-
-  if (!user) {
-    return null // Don't render anything if the user is not logged in
-  }
+  const user = useSelector(selectUser);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
@@ -112,6 +78,5 @@ export default function UserAvatarWidget() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

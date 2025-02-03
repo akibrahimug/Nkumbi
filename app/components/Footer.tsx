@@ -1,9 +1,9 @@
 "use client";
-
+import React from "react";
 import Link from "next/link";
 import { useState } from "react";
 import { Mail } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/use-toast";
+} from "@/app/components/ui/dialog";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { toast } from "@/app/components/ui/use-toast";
 
 export function Footer() {
   const [email, setEmail] = useState("");

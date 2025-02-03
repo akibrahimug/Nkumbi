@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { ArrowLeft, Users } from "lucide-react";
+import { useToast } from "@/app/components/ui/use-toast";
 import { Post } from "@/types";
 import { PostItem } from "../components/PostItem";
 import { NewDiscussionForm } from "../components/NewDiscussionForm";
+import Loading from "./loading";
 
 async function fetchAllPosts(): Promise<Post[]> {
   // In a real application, this would be an API call
@@ -211,36 +209,38 @@ export default function CommunityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F1DE] text-[#5E503F]">
-      <header className="bg-[#2C5F2D] text-white p-4 flex items-center">
-        <Link href="/" className="mr-4">
-          <ArrowLeft />
-        </Link>
-        <h1 className="text-2xl font-bold">Community Forum</h1>
-      </header>
-      <main className="p-4 space-y-4">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4 flex items-center">
-            <Users className="mr-2" /> Recent Discussions
-          </h2>
-          {isLoading ? (
-            <p>Loading discussions...</p>
-          ) : (
-            <ul className="space-y-6">
-              {posts.map((post) => (
-                <PostItem
-                  key={post.id}
-                  post={post}
-                  onNewComment={handleNewComment}
-                  onVote={handleVote}
-                  currentUser={currentUser}
-                />
-              ))}
-            </ul>
-          )}
-        </div>
-        <NewDiscussionForm />
-      </main>
-    </div>
+    <Suspense fallback={<Loading />}>
+      <div className="min-h-screen bg-[#F4F1DE] text-[#5E503F]">
+        <header className="bg-[#2C5F2D] text-white p-4 flex items-center">
+          <Link href="/" className="mr-4">
+            <ArrowLeft />
+          </Link>
+          <h1 className="text-2xl font-bold">Community Forum</h1>
+        </header>
+        <main className="p-4 space-y-4">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
+              <Users className="mr-2" /> Recent Discussions
+            </h2>
+            {isLoading ? (
+              <p>Loading discussions...</p>
+            ) : (
+              <ul className="space-y-6">
+                {posts.map((post) => (
+                  <PostItem
+                    key={post.id}
+                    post={post}
+                    onNewComment={handleNewComment}
+                    onVote={handleVote}
+                    currentUser={currentUser}
+                  />
+                ))}
+              </ul>
+            )}
+          </div>
+          <NewDiscussionForm />
+        </main>
+      </div>
+    </Suspense>
   );
 }

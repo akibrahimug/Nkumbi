@@ -1,13 +1,18 @@
-import { Button } from '@/components/ui/button'
+import { Button } from "@/app/components/ui/button";
 
 interface FormNavigationProps {
-  isFirstStep: boolean
-  isLastStep: boolean
-  back: () => void
-  isSubmitting: boolean
+  isFirstStep: boolean;
+  isLastStep: boolean;
+  back: () => void;
+  isSubmitting: boolean;
 }
 
-export function FormNavigation({ isFirstStep, isLastStep, back, isSubmitting }: FormNavigationProps) {
+export function FormNavigation({
+  isFirstStep,
+  isLastStep,
+  back,
+  isSubmitting,
+}: FormNavigationProps) {
   return (
     <div className="flex justify-between w-full">
       {!isFirstStep && (
@@ -16,9 +21,8 @@ export function FormNavigation({ isFirstStep, isLastStep, back, isSubmitting }: 
         </Button>
       )}
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Submitting...' : isLastStep ? 'Submit' : 'Next'}
+        {isSubmitting ? "Submitting..." : isLastStep ? "Submit" : "Next"}
       </Button>
     </div>
-  )
+  );
 }
-

@@ -1,9 +1,8 @@
 "use client";
-import Cookies from "js-cookie";
+
 import Link from "next/link";
 import Image from "next/image";
-import { User, Settings, LogOut, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { User, Settings, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,66 +10,44 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
-import { clearUser } from "@/store/slices/userSlice";
-import { toast } from "sonner";
+} from "@/app/components/ui/dropdown-menu";
+import UserIcon from "@/app/components/ui/userIcon";
+import { Button } from "@/app/components/ui/button";
+import { signOut } from "next-auth/react";
+import { useSelector } from "react-redux";
+import { selectUser, selectIsAuthenticated } from "@/store/slices/userSlice";
 
 export default function UserProfileDropdown() {
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const { data: session } = useSession();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
-  const handleSignOut = async () => {
-    try {
-      // Clear all cookies
-      Object.keys(Cookies.get()).forEach((cookieName) => {
-        Cookies.remove(cookieName, { path: "/" });
-      });
-
-      // Clear Redux state
-      dispatch(clearUser());
-
-      // Sign out from NextAuth
-      await signOut({
-        redirect: false,
-      });
-
-      // Force a clean reload to the auth page
-      window.location.replace("/auth");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Error signing out");
-    }
-  };
-
-  if (!session) {
-    return null;
+  if (!isAuthenticated || !user) {
+    console.log("No user");
+    return (
+      <Link href="/auth">
+        <Button variant="ghost" className="h-8">
+          Sign In
+        </Button>
+      </Link>
+    );
   }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Image
-            src={session.user?.image || "/placeholder.svg"}
-            alt={session.user?.name || "User"}
-            width={32}
-            height={32}
-            className="rounded-full"
+        <Button variant={"nostyles"} size={"none"} className="border-none">
+          <UserIcon
+            firstName={user?.name || ""}
+            profilePicture={user?.avatar}
+            size={30}
           />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {session.user?.name}
-            </p>
+            <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {session.user?.email}
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -88,7 +65,7 @@ export default function UserProfileDropdown() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem onClick={() => signOut()}>
           <LogOut className="mr-2 h-4 w-4" />
           Log out
         </DropdownMenuItem>

@@ -1,18 +1,18 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { ArrowLeft, Truck } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { 
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { ArrowLeft, Truck } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/app/components/ui/select";
 
-type ShipmentStatus = 'pending' | 'in_transit' | 'delivered'
+type ShipmentStatus = "pending" | "in_transit" | "delivered";
 
 type Shipment = {
   id: string;
@@ -20,25 +20,25 @@ type Shipment = {
   quantity: number;
   destination: string;
   status: ShipmentStatus;
-}
+};
 
 export default function TransportationPage() {
-  const [shipments, setShipments] = useState<Shipment[]>([])
+  const [shipments, setShipments] = useState<Shipment[]>([]);
 
   useEffect(() => {
-    const savedShipments = localStorage.getItem('shipments')
+    const savedShipments = localStorage.getItem("shipments");
     if (savedShipments) {
-      setShipments(JSON.parse(savedShipments))
+      setShipments(JSON.parse(savedShipments));
     }
-  }, [])
+  }, []);
 
   const updateShipmentStatus = (id: string, status: ShipmentStatus) => {
-    const updatedShipments = shipments.map(shipment => 
+    const updatedShipments = shipments.map((shipment) =>
       shipment.id === id ? { ...shipment, status } : shipment
-    )
-    setShipments(updatedShipments)
-    localStorage.setItem('shipments', JSON.stringify(updatedShipments))
-  }
+    );
+    setShipments(updatedShipments);
+    localStorage.setItem("shipments", JSON.stringify(updatedShipments));
+  };
 
   return (
     <div className="min-h-screen bg-[#F4F1DE] text-[#5E503F]">
@@ -55,13 +55,17 @@ export default function TransportationPage() {
             <p className="text-gray-500">No shipments found</p>
           ) : (
             <ul className="space-y-4">
-              {shipments.map(shipment => (
+              {shipments.map((shipment) => (
                 <li key={shipment.id} className="border-b pb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold">{shipment.quantity}kg to {shipment.destination}</span>
+                    <span className="font-semibold">
+                      {shipment.quantity}kg to {shipment.destination}
+                    </span>
                     <Select
                       value={shipment.status}
-                      onValueChange={(value: ShipmentStatus) => updateShipmentStatus(shipment.id, value)}
+                      onValueChange={(value: ShipmentStatus) =>
+                        updateShipmentStatus(shipment.id, value)
+                      }
                     >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue />
@@ -73,7 +77,9 @@ export default function TransportationPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <p className="text-sm text-gray-600">Transport: {shipment.transportOption}</p>
+                  <p className="text-sm text-gray-600">
+                    Transport: {shipment.transportOption}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -81,6 +87,5 @@ export default function TransportationPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-

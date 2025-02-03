@@ -1,17 +1,21 @@
 "use client";
+
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import UserProfileDropdown from "../../components/UserProfileDropdown";
 import NotificationDropdown from "../../components/NotificationDropdown";
-import UserAvatarWidget from "../../components/UserAvatarWidget";
-import { useSession } from "next-auth/react";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/store/slices/userSlice";
 
 export default function ProfileSettingsPage() {
-  const { data: session } = useSession();
-  const currentUser = session?.user;
-  const handleSaveChanges = () => {
+  const currentUser = useSelector(selectUser);
+
+  const handleSaveChanges = (event: React.FormEvent) => {
+    event.preventDefault();
     console.log("Save changes");
+    // TODO: dispatch an action or call an API to update user
   };
+
   return (
     <div className="min-h-screen bg-[#F4F1DE] text-[#5E503F]">
       <header className="bg-[#2C5F2D] text-white p-4 flex justify-between items-center">
@@ -26,10 +30,10 @@ export default function ProfileSettingsPage() {
           <UserProfileDropdown />
         </div>
       </header>
+
       <main className="p-4 space-y-4">
-        <UserAvatarWidget />
         <div className="bg-white p-6 rounded-lg shadow">
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSaveChanges}>
             <div>
               <label
                 htmlFor="name"
@@ -41,7 +45,7 @@ export default function ProfileSettingsPage() {
                 type="text"
                 id="name"
                 name="name"
-                value={currentUser?.name}
+                defaultValue={currentUser?.name || ""}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#2C5F2D] focus:ring focus:ring-[#2C5F2D] focus:ring-opacity-50"
               />
             </div>
@@ -60,8 +64,8 @@ export default function ProfileSettingsPage() {
                 className="mt-1 block w-full"
               />
             </div>
+
             <button
-              onClick={handleSaveChanges}
               type="submit"
               className="inline-flex items-center bg-[#2C5F2D] text-white px-4 py-2 rounded-md hover:bg-[#1F4F1F] transition-colors"
             >
