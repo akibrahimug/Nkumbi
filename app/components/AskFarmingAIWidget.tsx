@@ -1,372 +1,167 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  Wheat,
-  Send,
-  Save,
-  Share2,
-  History,
-  ThumbsUp,
-  ThumbsDown,
-  HelpCircle,
-} from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Send } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
-import { useChat } from "ai/react";
-import { AutocompleteInput } from "./AutocompleteInput";
-import { RelatedTopics } from "./RelatedTopics";
-import { VoiceInput } from "./VoiceInput";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import { useToast } from "@/app/components/ui/use-toast";
-import { useInView } from "react-intersection-observer";
 
-const CACHE_KEY = "farmingAICache";
-const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+interface Message {
+  id: string;
+  content: string;
+  sender: "user" | "ai";
+}
 
 export default function AskFarmingAIWidget() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [savedQueries, setSavedQueries] = useState<string[]>([]);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [relatedTopics, setRelatedTopics] = useState<
-    { title: string; url: string }[]
-  >([]);
-  const [cache, setCache] = useState<
-    Record<string, { response: string; timestamp: number }>
-  >({});
-  const [isListening, setIsListening] = useState(false);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
   const { toast } = useToast();
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-    rootMargin: "200px 0px",
-  });
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const {
-    messages,
-    input,
-    setInput,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-  } = useChat({
-    api: "/api/ai",
-    onFinish: (message) => {
-      setShowFeedback(true);
-      const topics = generateRelatedTopics(message.content);
-      setRelatedTopics(topics);
-      updateCache(input, message.content);
-    },
-  });
-
-  useEffect(() => {
-    if (inView) {
-      const saved = localStorage.getItem("savedQueries");
-      if (saved) {
-        setSavedQueries(JSON.parse(saved));
-      }
-
-      const cachedData = localStorage.getItem(CACHE_KEY);
-      if (cachedData) {
-        setCache(JSON.parse(cachedData));
-      }
-    }
-  }, [inView]);
-
-  const updateCache = useCallback((query: string, response: string) => {
-    setCache((prevCache) => {
-      const newCache = {
-        ...prevCache,
-        [query]: { response, timestamp: Date.now() },
-      };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(newCache));
-      return newCache;
-    });
-  }, []);
-
-  const getCachedResponse = useCallback(
-    (query: string) => {
-      const cachedItem = cache[query];
-      if (cachedItem && Date.now() - cachedItem.timestamp < CACHE_EXPIRY) {
-        return cachedItem.response;
-      }
-      return null;
-    },
-    [cache]
-  );
-
-  const isAgricultureRelated = useMemo(() => {
-    const agricultureKeywords = [
-      "farming",
-      "crop",
-      "harvest",
-      "soil",
-      "plant",
-      "seed",
-      "fertilizer",
-      "pesticide",
-      "irrigation",
-      "weather",
-      "livestock",
-      "agriculture",
-    ];
-    return (question: string) =>
-      agricultureKeywords.some((keyword) =>
-        question.toLowerCase().includes(keyword)
-      );
-  }, []);
-
-  const handleAskQuestion = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!isAgricultureRelated(input)) {
-      toast({
-        title: "Non-agriculture Question",
-        description: "Please ask a question related to farming or agriculture.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const cachedResponse = getCachedResponse(input);
-    if (cachedResponse) {
-      setInput("");
-      setIsExpanded(true);
-      setShowFeedback(true);
-      const topics = generateRelatedTopics(cachedResponse);
-      setRelatedTopics(topics);
-      toast({
-        title: "Cached Response",
-        description: "This answer was retrieved from cache.",
-      });
-      return;
-    }
-
-    handleSubmit(e);
-    setIsExpanded(true);
-    setShowFeedback(false);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const saveQuery = useCallback(() => {
-    if (input) {
-      setSavedQueries((prevQueries) => {
-        const updatedQueries = prevQueries ? [...prevQueries, input] : [input];
-        localStorage.setItem("savedQueries", JSON.stringify(updatedQueries));
-        return updatedQueries;
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: input,
+      sender: "user",
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setInput(""); // Clear input immediately after sending
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+        body: JSON.stringify({ prompt: userMessage.content }),
       });
+
+      const data = await res.json();
+      console.log("Response:", data);
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to get response");
+      }
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.result.generated_text,
+        sender: "ai",
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error: any) {
+      console.error("Error:", error);
       toast({
-        title: "Query Saved",
-        description: "Your query has been saved for future reference.",
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
       });
+
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "Sorry, I encountered an error. Please try again.",
+        sender: "ai",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
-  }, [input, toast]);
-
-  const shareQuery = useCallback(() => {
-    const shareText = `Check out this farming question: ${input}`;
-    if (navigator.share) {
-      navigator.share({
-        title: "Farming Question",
-        text: shareText,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(shareText);
-      toast({
-        title: "Copied to Clipboard",
-        description: "The query has been copied to your clipboard.",
-      });
-    }
-  }, [input, toast]);
-
-  const handleFeedback = useCallback(
-    (isPositive: boolean) => {
-      // Here you would typically send this feedback to your server
-      console.log(
-        `Feedback for last response: ${isPositive ? "positive" : "negative"}`
-      );
-      setShowFeedback(false);
-      toast({
-        title: "Feedback Received",
-        description: "Thank you for your feedback!",
-      });
-    },
-    [toast]
-  );
-
-  const escalateQuery = useCallback(() => {
-    // Here you would typically implement the logic to escalate the query
-    toast({
-      title: "Query Escalated",
-      description:
-        "Your query has been escalated to our expert team. We'll get back to you soon!",
-    });
-  }, [toast]);
-
-  const generateRelatedTopics = useCallback((content: string) => {
-    // This is a simplified example. In a real application, you might use
-    // more sophisticated NLP techniques or an API call to generate related topics.
-    const topics = [
-      { title: "Soil Health Management", url: "/community/soil-health" },
-      {
-        title: "Sustainable Farming Practices",
-        url: "/resources/sustainable-farming",
-      },
-      { title: "Crop Disease Prevention", url: "/community/crop-diseases" },
-    ];
-    return topics;
-  }, []);
-
-  const handleVoiceInput = useCallback(
-    (transcript: string) => {
-      setInput(transcript);
-    },
-    [setInput]
-  );
+  };
 
   return (
-    <div
-      ref={ref}
-      className="bg-white p-4 rounded-lg shadow transition-all duration-200 ease-in-out hover:shadow-md mb-4"
-    >
-      <h2 className="text-lg font-semibold mb-4 flex items-center text-[#5E503F]">
-        <Wheat className="mr-2 text-[#2C5F2D] w-5 h-5 sm:w-6 sm:h-6" /> Ask the
-        Farming AI
-      </h2>
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-4 border-t border-[#2C5F2D] pt-4"
-          >
-            <div className="space-y-4">
-              {messages &&
-                messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`flex ${
-                      m.role === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`max-w-3/4 p-2 rounded-lg ${
-                        m.role === "user"
-                          ? "bg-[#2C5F2D] text-white"
-                          : "bg-[#F4F1DE] text-[#5E503F]"
-                      }`}
-                    >
-                      {m.content}
-                    </div>
-                  </div>
-                ))}
-              {isLoading && (
-                <motion.div
-                  className="flex justify-start"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <motion.div
-                    className="bg-[#f4f3ee] text-[#000000] p-2 rounded-lg"
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ repeat: Infinity, duration: 1 }}
-                  >
-                    Thinking...
-                  </motion.div>
-                </motion.div>
-              )}
-            </div>
-            {showFeedback && (
-              <div className="mt-4 flex items-center justify-between">
-                <div>
-                  <span className="mr-2 text-[#000000]">
-                    Was this response helpful?
-                  </span>
-                  <Button
-                    onClick={() => handleFeedback(true)}
-                    variant="outline"
-                    size="sm"
-                    className="border-[#2C5F2D] text-[#2C5F2D] hover:bg-[#2C5F2D] hover:text-white"
-                  >
-                    <ThumbsUp className="w-4 h-4 mr-1" /> Yes
-                  </Button>
-                  <Button
-                    onClick={() => handleFeedback(false)}
-                    variant="outline"
-                    size="sm"
-                    className="ml-2 border-[#2C5F2D] text-[#2C5F2D] hover:bg-[#2C5F2D] hover:text-white"
-                  >
-                    <ThumbsDown className="w-4 h-4 mr-1" /> No
-                  </Button>
-                </div>
-                <Button
-                  onClick={escalateQuery}
-                  variant="outline"
-                  size="sm"
-                  className="border-[#2C5F2D] text-[#2C5F2D] hover:bg-[#2C5F2D] hover:text-white"
-                >
-                  <HelpCircle className="w-4 h-4 mr-1" /> Get Expert Help
-                </Button>
+    <div className="flex flex-col bg-white rounded-xl shadow-lg border border-gray-200">
+      {/* Chat Messages Area */}
+      {(messages.length > 0 || isLoading) && (
+        <div
+          ref={chatContainerRef}
+          className="flex-1 p-6 space-y-4 overflow-y-auto"
+        >
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.sender === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-[80%] p-4 rounded-lg transition-all duration-200
+                  ${
+                    message.sender === "user"
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+              >
+                {message.content}
               </div>
-            )}
-            {relatedTopics.length > 0 && (
-              <RelatedTopics topics={relatedTopics} />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {!isExpanded && savedQueries && savedQueries.length > 0 && (
-        <div className="mt-4 border-t border-[#2C5F2D] pt-4">
-          <h3 className="text-md font-semibold mb-2 text-[#5E503F]">
-            Past Queries
-          </h3>
-          <ul className="space-y-2">
-            {savedQueries.map((query, index) => (
-              <li key={index} className="flex justify-between items-center">
-                <span className="text-sm text-[#5E503F]">{query}</span>
-                <Button
-                  onClick={() => setInput(query)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#2C5F2D] hover:bg-[#F4F1DE]"
-                >
-                  Use
-                </Button>
-              </li>
-            ))}
-          </ul>
+            </div>
+          ))}
+
+          {/* Typing Indicator */}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-gray-100 p-4 rounded-lg">
+                <div className="flex space-x-2">
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
       )}
-      <form onSubmit={handleAskQuestion} className="space-y-4 mt-4">
-        <AutocompleteInput onSelect={setInput} />
-        <div className="flex items-center">
-          <Input
-            type="text"
-            placeholder="Or type your question here..."
-            value={input}
-            onChange={handleInputChange}
-            className="flex-grow mr-2 border-[#2C5F2D] focus:ring-[#2C5F2D]"
-          />
-          <VoiceInput
-            onTranscript={handleVoiceInput}
-            isListening={isListening}
-            setIsListening={setIsListening}
-          />
-          <Button
-            type="submit"
-            className="ml-2 bg-[#2C5F2D] text-white hover:bg-[#1F4F1F]"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-      </form>
 
-      <div className="mt-4 text-sm text-[#5E503F]">
-        <Link href="/community" className="text-[#2C5F2D] hover:underline">
-          Visit our community forum for more discussions
-        </Link>
-      </div>
+      {/* Input Form */}
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-center gap-2 p-4 border-t border-gray-200"
+      >
+        <Input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask a farming question..."
+          className="flex-grow py-3 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2"
+          disabled={isLoading}
+        />
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="bg-green-600 hover:bg-green-700 text-white rounded-full p-3 transition-colors duration-200"
+        >
+          <Send className="w-5 h-5" />
+        </Button>
+      </form>
     </div>
   );
 }

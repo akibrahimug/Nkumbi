@@ -1,23 +1,28 @@
 export interface Reply {
-  id: number;
+  id: string;
   author: string;
+  username?: string;
+  location?: string;
   content: string;
   timestamp: string;
   likes: number;
   dislikes: number;
-  userVote?: "like" | "dislike" | "none";
+  userVote: "like" | "dislike" | "none";
+  isAuthor: boolean;
   replies?: Reply[];
 }
 
 export interface Post {
-  id: number;
+  id: string;
   author: string;
-  avatar: string;
-  topic: string;
+  username?: string;
+  location?: string;
   content: string;
+  media?: string;
   timestamp: string;
   replies: Reply[];
   likes: number;
   dislikes: number;
-  userVote?: "like" | "dislike" | "none";
+  userVote: "like" | "dislike" | "none";
+  isAuthor: boolean;
 }

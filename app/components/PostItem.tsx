@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { MessageCircle, ThumbsUp, ThumbsDown, MapPin } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { CommentItem } from "./CommentItem";
@@ -15,10 +15,10 @@ import { Post } from "@/types";
 
 interface PostItemProps {
   post: Post;
-  onNewComment: (postId: number, comment: string, parentId?: number) => void;
+  onNewComment: (postId: string, comment: string, parentId?: string) => void;
   onVote: (
-    postId: number,
-    replyId: number | null,
+    postId: string,
+    commentId: string | null,
     voteType: "like" | "dislike" | "none"
   ) => void;
   currentUser: string;
@@ -52,11 +52,30 @@ export function PostItem({
   return (
     <li className="pb-4">
       <div className="flex items-center mb-2">
-        <span className="font-semibold">{post.author}</span>
-        <span className="text-xs text-gray-500 ml-auto">{post.timestamp}</span>
+        <div>
+          <span className="font-semibold">{post.author}</span>
+          {post.username && (
+            <span className="text-gray-500 text-sm ml-2">@{post.username}</span>
+          )}
+          {post.location && (
+            <div className="text-xs text-gray-500 flex items-center mt-1">
+              <MapPin className="w-3 h-3 mr-1" />
+              {post.location}
+            </div>
+          )}
+        </div>
+        <span className="text-xs text-gray-500 ml-auto">
+          {new Date(post.timestamp).toLocaleString()}
+        </span>
       </div>
-      <h3 className="font-semibold text-lg mb-2">{post.topic}</h3>
       <p className="text-sm mb-2">{post.content}</p>
+      {post.media && (
+        <img
+          src={post.media}
+          alt="Post media"
+          className="rounded-lg mb-4 max-h-96 w-full object-cover"
+        />
+      )}
       <div className="flex items-center space-x-4 mb-4">
         <Button
           variant="ghost"
@@ -67,7 +86,7 @@ export function PostItem({
               ? "text-green-600"
               : "text-gray-600 hover:text-green-600"
           }`}
-          disabled={post.author === currentUser}
+          disabled={post.isAuthor}
         >
           <ThumbsUp className="w-4 h-4 mr-2" /> {post.likes}
         </Button>
@@ -80,7 +99,7 @@ export function PostItem({
               ? "text-red-600"
               : "text-gray-600 hover:text-red-600"
           }`}
-          disabled={post.author === currentUser}
+          disabled={post.isAuthor}
         >
           <ThumbsDown className="w-4 h-4 mr-2" /> {post.dislikes}
         </Button>

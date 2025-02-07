@@ -8,204 +8,119 @@ import { Post } from "@/types";
 import { PostItem } from "../components/PostItem";
 import { NewDiscussionForm } from "../components/NewDiscussionForm";
 import Loading from "./loading";
+import { useSession } from "next-auth/react";
 
-async function fetchAllPosts(): Promise<Post[]> {
-  // In a real application, this would be an API call
-  // For demonstration, we'll simulate an API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  return [
-    {
-      id: 1,
-      author: "Jane Doe",
-      avatar: "wheat",
-      topic: "Pest Control",
-      content:
-        "Has anyone tried neem oil for pest control? I've heard it's effective and eco-friendly.",
-      timestamp: "2 hours ago",
-      replies: [
-        {
-          id: 1,
-          author: "John Smith",
-          content: "Yes, I've used neem oil and it works great!",
-          timestamp: "1 hour ago",
-          votes: 3,
-          likes: 3,
-          dislikes: 0,
-          userVote: "none",
-        },
-        {
-          id: 2,
-          author: "Alice Johnson",
-          content:
-            "It's good, but be careful not to apply it during the hot part of the day.",
-          timestamp: "30 minutes ago",
-          votes: 1,
-          likes: 1,
-          dislikes: 0,
-          userVote: "none",
-        },
-      ],
-      votes: 5,
-      likes: 5,
-      dislikes: 0,
-      userVote: "none",
-    },
-    // ... (other posts)
-  ];
+async function fetchPosts(): Promise<Post[]> {
+  const response = await fetch("/api/posts");
+  if (!response.ok) {
+    throw new Error("Failed to fetch posts");
+  }
+  return response.json();
 }
 
 export default function CommunityPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState("You");
+  const { data: session } = useSession();
 
   useEffect(() => {
-    fetchAllPosts().then((fetchedPosts) => {
-      setPosts(fetchedPosts);
-      setIsLoading(false);
-    });
-  }, []);
+    fetchPosts()
+      .then((fetchedPosts) => {
+        setPosts(fetchedPosts);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching posts:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load posts. Please try again later.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      });
+  }, [toast]);
 
-  const handleNewComment = (
-    postId: number,
+  const handleNewComment = async (
+    postId: string,
     comment: string,
-    parentId?: number
+    parentId?: string
   ) => {
-    const updatedPosts = posts.map((post) => {
-      if (post.id === postId) {
-        if (parentId) {
-          // This is a reply to a comment
-          const updatedReplies = post.replies.map((reply) => {
-            if (reply.id === parentId) {
-              return {
-                ...reply,
-                replies: [
-                  ...(reply.replies || []),
-                  {
-                    id: Date.now(),
-                    author: currentUser,
-                    content: comment,
-                    timestamp: "Just now",
-                    likes: 0,
-                    dislikes: 0,
-                    userVote: "none",
-                  },
-                ],
-              };
-            }
-            return reply;
-          });
-          return { ...post, replies: updatedReplies };
-        } else {
-          // This is a new top-level comment
-          return {
-            ...post,
-            replies: [
-              ...post.replies,
-              {
-                id: Date.now(),
-                author: currentUser,
-                content: comment,
-                timestamp: "Just now",
-                likes: 0,
-                dislikes: 0,
-                userVote: "none",
-              },
-            ],
-          };
-        }
-      }
-      return post;
-    });
+    try {
+      const response = await fetch("/api/posts/comment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId,
+          content: comment,
+          parentCommentId: parentId,
+        }),
+      });
 
-    setPosts(updatedPosts);
-    toast({
-      title: "Success",
-      description: "Your comment has been added",
-    });
+      if (!response.ok) {
+        throw new Error("Failed to add comment");
+      }
+
+      // Refresh posts after adding comment
+      const updatedPosts = await fetchPosts();
+      setPosts(updatedPosts);
+
+      toast({
+        title: "Success",
+        description: "Your comment has been added",
+      });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add comment. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleVote = (
-    postId: number,
-    replyId: number | null,
+  const handleVote = async (
+    postId: string,
+    commentId: string | null,
     voteType: "like" | "dislike" | "none"
   ) => {
-    const updatedPosts = posts.map((post) => {
-      if (post.id === postId) {
-        if (replyId === null) {
-          // Voting on the main post
-          let newLikes = post.likes;
-          let newDislikes = post.dislikes;
-          let newUserVote = voteType;
+    try {
+      const response = await fetch("/api/posts/vote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId,
+          commentId,
+          voteType,
+        }),
+      });
 
-          if (post.userVote === "like" && voteType !== "like") {
-            newLikes--;
-          } else if (post.userVote === "dislike" && voteType !== "dislike") {
-            newDislikes--;
-          }
-
-          if (voteType === "like" && post.userVote !== "like") {
-            newLikes++;
-          } else if (voteType === "dislike" && post.userVote !== "dislike") {
-            newDislikes++;
-          }
-
-          return {
-            ...post,
-            likes: newLikes,
-            dislikes: newDislikes,
-            userVote: newUserVote,
-          };
-        } else {
-          // Voting on a reply
-          const updatedReplies = post.replies.map((reply) => {
-            if (reply.id === replyId) {
-              let newLikes = reply.likes;
-              let newDislikes = reply.dislikes;
-              let newUserVote = voteType;
-
-              if (reply.userVote === "like" && voteType !== "like") {
-                newLikes--;
-              } else if (
-                reply.userVote === "dislike" &&
-                voteType !== "dislike"
-              ) {
-                newDislikes--;
-              }
-
-              if (voteType === "like" && reply.userVote !== "like") {
-                newLikes++;
-              } else if (
-                voteType === "dislike" &&
-                reply.userVote !== "dislike"
-              ) {
-                newDislikes++;
-              }
-
-              return {
-                ...reply,
-                likes: newLikes,
-                dislikes: newDislikes,
-                userVote: newUserVote,
-              };
-            }
-            return reply;
-          });
-          return { ...post, replies: updatedReplies };
-        }
+      if (!response.ok) {
+        throw new Error("Failed to record vote");
       }
-      return post;
-    });
 
-    setPosts(updatedPosts);
-    toast({
-      title: "Vote Recorded",
-      description: `Your vote has been ${
-        voteType === "none" ? "removed" : "recorded"
-      }`,
-    });
+      // Refresh posts after voting
+      const updatedPosts = await fetchPosts();
+      setPosts(updatedPosts);
+
+      toast({
+        title: "Vote Recorded",
+        description: `Your vote has been ${
+          voteType === "none" ? "removed" : "recorded"
+        }`,
+      });
+    } catch (error) {
+      console.error("Error recording vote:", error);
+      toast({
+        title: "Error",
+        description: "Failed to record vote. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -232,13 +147,13 @@ export default function CommunityPage() {
                     post={post}
                     onNewComment={handleNewComment}
                     onVote={handleVote}
-                    currentUser={currentUser}
+                    currentUser={session?.user?.email || ""}
                   />
                 ))}
               </ul>
             )}
           </div>
-          <NewDiscussionForm />
+          <NewDiscussionForm onSuccess={() => fetchPosts().then(setPosts)} />
         </main>
       </div>
     </Suspense>
