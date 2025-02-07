@@ -1,5 +1,5 @@
 import React from "react";
-import { Skeleton } from "@/app/components/ui/Skeleton";
+import { Skeleton } from "@/app/components/ui/skeleton";
 
 export function QuickAccessSkeleton() {
   const quickAccessButtons = Array(7).fill(0);
